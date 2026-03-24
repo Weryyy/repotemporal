@@ -1,0 +1,3 @@
+PREGUNTA: Which statement describes the relationship between natural language processing (NLP) and machine learning (ML)?
+RESPUESTA CORRECTA: NLP is a specific type of ML problem.
+------------------------

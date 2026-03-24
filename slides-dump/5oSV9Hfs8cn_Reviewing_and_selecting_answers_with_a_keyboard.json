@@ -1,0 +1,477 @@
+{
+  "title": "Reviewing and selecting answers with a keyboard",
+  "trackViews": true,
+  "showMenuResultIcon": false,
+  "viewGroupId": "",
+  "historyGroupId": "",
+  "videoZoom": "",
+  "scrolling": false,
+  "transition": "appear",
+  "transDuration": 0,
+  "transDir": 1,
+  "wipeTrans": false,
+  "slideLock": false,
+  "navIndex": -1,
+  "globalAudioId": "",
+  "thumbnailid": "",
+  "slideNumberInScene": 0,
+  "includeInSlideCounts": false,
+  "presenterRef": {
+    "id": "none"
+  },
+  "showAnimationId": "",
+  "lmsId": "Slide1",
+  "width": 921,
+  "height": 518,
+  "resume": false,
+  "background": {
+    "type": "fill",
+    "fill": {
+      "type": "linear",
+      "rotation": 90,
+      "colors": [
+        {
+          "kind": "color",
+          "rgb": "0xFFFFFF",
+          "alpha": 100,
+          "stop": 0
+        }
+      ]
+    }
+  },
+  "id": "5oSV9Hfs8cn",
+  "actionGroups": {
+    "ActGrpOnNextButtonClick": {
+      "kind": "actiongroup",
+      "actions": [
+        {
+          "kind": "close_window",
+          "id": "LightboxControlsWnd"
+        },
+        {
+          "kind": "close_window",
+          "id": "LightboxWnd"
+        }
+      ]
+    },
+    "ActGrpOnPrevButtonClick": {
+      "kind": "actiongroup",
+      "actions": [
+        {
+          "kind": "close_window",
+          "id": "LightboxControlsWnd"
+        },
+        {
+          "kind": "close_window",
+          "id": "LightboxWnd"
+        },
+        {
+          "kind": "history_prev"
+        }
+      ]
+    },
+    "NavigationRestrictionNextSlide_5oSV9Hfs8cn": {
+      "kind": "actiongroup",
+      "actions": [
+        {
+          "kind": "exe_actiongroup",
+          "id": "ActGrpOnNextButtonClick"
+        }
+      ]
+    },
+    "NavigationRestrictionPreviousSlide_5oSV9Hfs8cn": {
+      "kind": "actiongroup",
+      "actions": [
+        {
+          "kind": "exe_actiongroup",
+          "id": "ActGrpOnPrevButtonClick"
+        }
+      ]
+    }
+  },
+  "events": [
+    {
+      "kind": "onslidestart",
+      "actions": [
+        {
+          "kind": "if_action",
+          "condition": {
+            "statement": {
+              "kind": "compare",
+              "operator": "eq",
+              "valuea": "_playerVars.#hasPrevHistory",
+              "typea": "var",
+              "valueb": false,
+              "typeb": "boolean"
+            }
+          },
+          "thenActions": [
+            {
+              "kind": "enable_window_control",
+              "name": "previous",
+              "enable": false,
+              "affectTabStop": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "onbeforeslidein",
+      "actions": [
+        {
+          "kind": "if_action",
+          "condition": {
+            "statement": {
+              "kind": "compare",
+              "operator": "eq",
+              "valuea": "$WindowId",
+              "typea": "property",
+              "valueb": "_frame",
+              "typeb": "string"
+            }
+          },
+          "thenActions": [
+            {
+              "kind": "set_frame_layout",
+              "name": "pxabnsnfns00000000001"
+            }
+          ],
+          "elseActions": [
+            {
+              "kind": "set_window_control_layout",
+              "name": "pxabnsnfns00000000001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "onnextslide",
+      "actions": [
+        {
+          "kind": "exe_actiongroup",
+          "id": "NavigationRestrictionNextSlide_5oSV9Hfs8cn"
+        }
+      ]
+    },
+    {
+      "kind": "onprevslide",
+      "actions": [
+        {
+          "kind": "exe_actiongroup",
+          "id": "NavigationRestrictionPreviousSlide_5oSV9Hfs8cn"
+        }
+      ]
+    },
+    {
+      "kind": "ontransitionin",
+      "actions": [
+        {
+          "kind": "adjustvar",
+          "variable": "_player.LastSlideViewed_6RU7an9Ucv7",
+          "operator": "set",
+          "value": {
+            "type": "string",
+            "value": "_player."
+          }
+        },
+        {
+          "kind": "adjustvar",
+          "variable": "_player.LastSlideViewed_6RU7an9Ucv7",
+          "operator": "add",
+          "value": {
+            "type": "property",
+            "value": "$AbsoluteId"
+          }
+        }
+      ]
+    }
+  ],
+  "slideLayers": [
+    {
+      "enableSeek": true,
+      "enableReplay": true,
+      "timeline": {
+        "duration": 5000,
+        "events": [
+          {
+            "kind": "ontimelinetick",
+            "time": 0,
+            "actions": [
+              {
+                "kind": "show",
+                "transition": "appear",
+                "objRef": {
+                  "type": "string",
+                  "value": "5ngQHhk7Mxc"
+                }
+              },
+              {
+                "kind": "show",
+                "transition": "appear",
+                "objRef": {
+                  "type": "string",
+                  "value": "5hyZltqrTiN"
+                }
+              },
+              {
+                "kind": "show",
+                "transition": "appear",
+                "objRef": {
+                  "type": "string",
+                  "value": "6iAwz1Jkyly"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "objects": [
+        {
+          "kind": "vectorshape",
+          "rotation": 0,
+          "accType": "text",
+          "cliptobounds": false,
+          "defaultAction": "",
+          "textLib": [
+            {
+              "kind": "textdata",
+              "uniqueId": "6iAwz1Jkyly_-1574406398",
+              "id": "01",
+              "linkId": "txt__default_6iAwz1Jkyly",
+              "type": "vectortext",
+              "xPos": 10,
+              "yPos": 5,
+              "xAccOffset": 10,
+              "yAccOffset": 5,
+              "width": 483,
+              "height": 19,
+              "shadowIndex": -1,
+              "scrollOverflow": false,
+              "vartext": "<p style=\"text-align:left;direction: ltr; padding-left: 0px\"><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:14.6667px; color:#232f3e;line-height:18.3773333333333px;\">&#169; 2022, Amazon Web Services, Inc. or its affiliates. All rights reserved.</span></p>",
+              "vectortext": {
+                "left": 0,
+                "top": 0,
+                "right": 493,
+                "bottom": 24,
+                "pngfb": false,
+                "pr": {
+                  "l": "Lib",
+                  "i": 6
+                }
+              }
+            }
+          ],
+          "shapemaskId": "",
+          "xPos": 415,
+          "yPos": 488,
+          "tabIndex": 2,
+          "tabEnabled": true,
+          "xOffset": 0,
+          "yOffset": 0,
+          "rotateXPos": 251.5,
+          "rotateYPos": 14.5,
+          "scaleX": 100,
+          "scaleY": 100,
+          "alpha": 100,
+          "depth": 1,
+          "scrolling": false,
+          "shuffleLock": false,
+          "data": {
+            "hotlinkId": "",
+            "accState": 0,
+            "vectorData": {
+              "left": 0,
+              "top": 0,
+              "right": 503,
+              "bottom": 30,
+              "altText": "© 2022, Amazon Web Services, Inc. or its affiliates. All rights reserved.",
+              "pngfb": false,
+              "pr": {
+                "l": "Lib",
+                "i": 5
+              }
+            },
+            "html5data": {
+              "xPos": 0,
+              "yPos": 0,
+              "width": 503,
+              "height": 30,
+              "strokewidth": 0
+            }
+          },
+          "width": 503,
+          "height": 29,
+          "resume": false,
+          "useHandCursor": true,
+          "id": "6iAwz1Jkyly"
+        },
+        {
+          "kind": "vectorshape",
+          "rotation": 0,
+          "accType": "text",
+          "cliptobounds": false,
+          "defaultAction": "",
+          "textLib": [
+            {
+              "kind": "textdata",
+              "uniqueId": "5ngQHhk7Mxc_1512696723",
+              "id": "01",
+              "linkId": "txt__default_5ngQHhk7Mxc",
+              "type": "vectortext",
+              "xPos": 10,
+              "yPos": 5,
+              "xAccOffset": 10,
+              "yAccOffset": 5,
+              "width": 772,
+              "height": 386,
+              "shadowIndex": -1,
+              "scrollOverflow": false,
+              "vartext": "<p style=\"text-align:left;direction: ltr; padding-left: 0px\"><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\"><b style=\"font-family: 'Amazon EmberBold ChBold48E300FC','Amazon Ember';\">Choose an answer for a multiple choice question</b></span></p><p style=\"text-align:left;direction: ltr; padding-left: 18px\"><span style=\"font-family: 'Arial Charset0_v8wz5YMo9EE9FF07','Arial'; font-size:24px; color:#232f3e;line-height:30.072px; display: inline-block; text-align:left; min-width: 18px; margin-left: -18px;\">•</span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\">Press Tab to move to the first answer choice. To select the first answer, press Spacebar.</span></p><p style=\"text-align:left;direction: ltr; padding-left: 18px\"><span style=\"font-family: 'Arial Charset0_v8wz5YMo9EE9FF07','Arial'; font-size:24px; color:#232f3e;line-height:30.072px; display: inline-block; text-align:left; min-width: 18px; margin-left: -18px;\">•</span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\">To choose a different answer, use any arrow key to cycle through the choices.\\t</span></p><p style=\"text-align:left;direction: ltr; padding-left: 0px\"><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\"><b style=\"font-family: 'Amazon EmberBold ChBold48E300FC','Amazon Ember';\">Choose an answer for a multiple response question</b></span></p><p style=\"text-align:left;direction: ltr; padding-left: 20px\"><span style=\"font-family: 'Arial Charset0_v8wz5YMo9EE9FF07','Arial'; font-size:24px; color:#232f3e;line-height:30.072px; display: inline-block; text-align:left; min-width: 20px; margin-left: -20px;\">•</span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\">Press Tab to move between answers, and press Spacebar to choose an answer.</span></p><p style=\"text-align:left;direction: ltr; padding-left: 20px\"><span style=\"font-family: 'Arial Charset0_v8wz5YMo9EE9FF07','Arial'; font-size:24px; color:#232f3e;line-height:30.072px; display: inline-block; text-align:left; min-width: 20px; margin-left: -20px;\">•</span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\">Repeat until all correct answers are selected.</span></p><p style=\"text-align:left;direction: ltr; padding-left: 0px\"><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\"><b style=\"font-family: 'Amazon EmberBold ChBold48E300FC','Amazon Ember';\">Submit your answer(s)</b></span></p><p style=\"text-align:left;direction: ltr; padding-left: 18px\"><span style=\"font-family: 'Arial Charset0_v8wz5YMo9EE9FF07','Arial'; font-size:24px; color:#232f3e;line-height:30.072px; display: inline-block; text-align:left; min-width: 18px; margin-left: -18px;\">•</span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\">Press </span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\">Tab</span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\"> to move to the </span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\"><b style=\"font-family: 'Amazon EmberBold ChBold48E300FC','Amazon Ember';\">Submit </b></span><span style=\"font-family: 'Amazon Ember Charset0_vFD236248','Amazon Ember'; font-size:24px; color:#232f3e;line-height:30.072px;\">button, and then press Enter.</span></p>",
+              "vectortext": {
+                "left": 0,
+                "top": 0,
+                "right": 777,
+                "bottom": 391,
+                "pngfb": false,
+                "pr": {
+                  "l": "Lib",
+                  "i": 168
+                }
+              }
+            }
+          ],
+          "shapemaskId": "",
+          "xPos": 49,
+          "yPos": 70,
+          "tabIndex": 1,
+          "tabEnabled": true,
+          "xOffset": 0,
+          "yOffset": 0,
+          "rotateXPos": 396,
+          "rotateYPos": 198,
+          "scaleX": 100,
+          "scaleY": 100,
+          "alpha": 100,
+          "depth": 2,
+          "scrolling": true,
+          "shuffleLock": false,
+          "data": {
+            "hotlinkId": "",
+            "accState": 0,
+            "vectorData": {
+              "left": 0,
+              "top": 0,
+              "right": 792,
+              "bottom": 396,
+              "altText": "Choose an answer for a multiple choice question\\nPress Tab to move to the first answer choice. To select the first answer, press Spacebar.\\nTo choose a different answer, use any arrow key to cycle through the choices.\\t\\nChoose an answer for a multiple response question\\nPress Tab to move between answers, and press Spacebar to choose an answer.\\nRepeat until all correct answers are selected.\\nSubmit your answer(s)\\nPress Tab to move to the Submit button, and then press Enter.",
+              "pngfb": false,
+              "pr": {
+                "l": "Lib",
+                "i": 167
+              }
+            },
+            "html5data": {
+              "xPos": 0,
+              "yPos": 0,
+              "width": 792,
+              "height": 396,
+              "strokewidth": 0
+            }
+          },
+          "width": 792,
+          "height": 396,
+          "resume": false,
+          "useHandCursor": true,
+          "id": "5ngQHhk7Mxc"
+        },
+        {
+          "kind": "vectorshape",
+          "rotation": 0,
+          "accType": "text",
+          "cliptobounds": false,
+          "defaultAction": "",
+          "textLib": [
+            {
+              "kind": "textdata",
+              "uniqueId": "5hyZltqrTiN_299331576",
+              "id": "01",
+              "linkId": "txt__default_5hyZltqrTiN",
+              "type": "vectortext",
+              "xPos": 0,
+              "yPos": 5,
+              "xAccOffset": 0,
+              "yAccOffset": 5,
+              "width": 840,
+              "height": 36,
+              "shadowIndex": -1,
+              "scrollOverflow": false,
+              "vartext": "<p style=\"text-align:left;direction: ltr; padding-left: 0px;margin-top: 12px\"><span style=\"font-family: 'Amazon Ember Heavy CharDBADBE4E','Amazon Ember Heavy','Amazon Ember'; font-size:26.6667px; color:#232f3e;line-height:33.4133333333333px;\">Reviewing and selecting answers with a keyboard</span></p>",
+              "vectortext": {
+                "left": 0,
+                "top": 0,
+                "right": 652,
+                "bottom": 39,
+                "pngfb": false,
+                "pr": {
+                  "l": "Lib",
+                  "i": 170
+                }
+              }
+            }
+          ],
+          "shapemaskId": "",
+          "xPos": 35,
+          "yPos": 35,
+          "tabIndex": 0,
+          "tabEnabled": true,
+          "xOffset": 0,
+          "yOffset": 0,
+          "rotateXPos": 425,
+          "rotateYPos": 23,
+          "scaleX": 100,
+          "scaleY": 100,
+          "alpha": 100,
+          "depth": 3,
+          "scrolling": true,
+          "shuffleLock": false,
+          "data": {
+            "hotlinkId": "",
+            "accState": 0,
+            "vectorData": {
+              "left": 0,
+              "top": 0,
+              "right": 850,
+              "bottom": 47,
+              "altText": "Reviewing and selecting answers with a keyboard",
+              "pngfb": false,
+              "pr": {
+                "l": "Lib",
+                "i": 169
+              }
+            },
+            "html5data": {
+              "xPos": 0,
+              "yPos": 0,
+              "width": 850,
+              "height": 47,
+              "strokewidth": 0
+            }
+          },
+          "width": 850,
+          "height": 46,
+          "resume": false,
+          "useHandCursor": true,
+          "id": "5hyZltqrTiN"
+        }
+      ],
+      "startTime": -1,
+      "elapsedTimeMode": "normal",
+      "useHandCursor": false,
+      "resume": false,
+      "kind": "slidelayer",
+      "isBaseLayer": true
+    }
+  ]
+}
