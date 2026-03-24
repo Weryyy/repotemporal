@@ -1,0 +1,1064 @@
+Quiero que me completes un curso de AWS que tengo abierto en otra pestaña, podrias hacerlo? de poder hacerlo aqui van las instrucciones: veras varias preguntas 1 - 10 con cuatro opciones cada una y deberas ir probando hasta acertar, recordando fallos anteriores para saber que respuestas sabes ya la respuesta y cuales no, habra algunas preguntas de seleccion varias estate atento a ellas y despues de cada pregunta el curso te dejara saber si la tuviste correcta o incorrecta. Al final de las 10 preguntas saldra una pantalla con tu puntuacion,  si tu puntuacion es menor a 70% presiona en volver a intentar o similar.
+De no poder hacer todo esto proporcioname soluciones a este problema que tengo y el como podria automatizarlo, de poder hacer un script o montar una Inteligencia artificial que nos haga el trabajo como acabo de describir proporcioname el codigo, si no exploraremos mas cosas16:37No puedo acceder a otras pestañas del navegador ni interactuar con páginas web externas — solo puedo ver y responder en esta conversación.
+Dicho esto, hay varias formas de abordar lo que describes:
+Opción 1: Automatización con script (Playwright/Selenium)
+Podría escribirte un script en Python que automatice el navegador para hacer exactamente lo que describes: leer preguntas, probar respuestas, recordar fallos y reintentar. El problema es que necesitaría saber la estructura HTML específica del curso (selectores, clases, etc.) para que funcione.
+Opción 2: Tú me pasas las preguntas, yo te doy las respuestas
+La forma más simple: copias y pegas cada pregunta aquí con sus 4 opciones, y yo te digo cuál es la correcta basándome en mi conocimiento de AWS. Tú haces clic. Rápido y sin complicaciones.
+Opción 3: Script genérico con Playwright
+Puedo escribirte un script que intente automatizar cursos tipo quiz de forma genérica, que tú luego adaptes a tu plataforma específica.
+¿Qué prefieres?¡Dime cómo quieres continuar y arrancamos! 🚀P: ¿Cómo quieres proceder?
+R: [No preference]16:38Sin problema. Vamos con las dos opciones a la vez — así tienes el script y puedo ayudarte con las respuestas en tiempo real.
+
+**ParaLa respuesta de Claude fue interrumpidaReintentarCtrlU-paginaCurso.txttxtCopio y pego de nuevo el request, pero esta vez te digo, vamos a intentar hacer la automatizacion con el script, aunque no estoy seguro que con el codigo de la pagina que te paso sera suficiente para responder otras instancias del curso,  tu me dices
+request anterior:
+Quiero que me completes un curso de AWS que tengo abierto en otra pestaña, podrias hacerlo? de poder hacerlo aqui van las instrucciones: veras varias preguntas 1 - 10 con cuatro opciones cada una y deberas ir probando hasta acertar, recordando fallos anteriores para saber que respuestas sabes ya la respuesta y cuales no, habra algunas preguntas de seleccion varias estate atento a ellas y despues de cada pregunta el curso te dejara saber si la tuviste correcta o incorrecta. Al final de las 10 preguntas saldra una pantalla con tu puntuacion,  si tu puntuacion es menor a 70% presiona en volver a intentar o similar.
+De no poder hacer todo esto proporcioname soluciones a este problema que tengo y el como podria automatizarlo, de poder hacer un script o montar una Inteligencia artificial que nos haga el trabajo como acabo de describir proporcioname el codigo, si no exploraremos mas cosasMostrar más16:40Primero déjame leer el código de la página para entender la estructura.Vio 3 archivosVio 3 archivosYa tengo suficiente información. He analizado el código de la página. Aquí está mi diagnóstico claro:
+
+🔍 Lo que encontré en el código
+La página es AWS Academy corriendo sobre Canvas LMS (Instructure). El quiz no está en el HTML de la página — está cargado dentro de un iframe LTI externo, específicamente desde:
+awsacademy.quiz-lti-pdx-prod.instructure.com
+Esto es importante porque significa que el quiz vive en un dominio diferente, lo que complica la automatización.
+
+⚠️ El problema principal
+Un script de Playwright sí puede funcionar, pero con una limitación clave: los iframes cross-origin (dominios distintos) tienen restricciones de seguridad. Playwright puede manejarlos, pero necesita acceder al frame correcto explícitamente.
+¿Será suficiente para otras instancias del curso? Sí, porque la estructura de Canvas LMS + Quiz LTI es consistente entre módulos. El script puede reutilizarse.
+
+Te genero ahora el script completo:Archivo creado, leyó un archivoArchivo creado, leyó un archivo🤖 Script listo — aquí el resumen de lo que hace y cómo usarlo
+Instalación rápida
+bashpip install playwright anthropic
+playwright install chromium
+python aws_quiz_bot.py
+Lo que hace el bot
+
+Abre Chrome visible — tú inicias sesión normalmente en AWS Academy
+Detecta el iframe del quiz LTI automáticamente
+Responde preguntas con esta estrategia por prioridad:
+
+🧠 Si ya sabe la respuesta correcta (memoria)
+🤖 Si tienes API key de Anthropic activa, pregunta a Claude
+🎲 Si no, prueba opciones no intentadas previamente
+
+
+Lee el feedback (correcto/incorrecto) después de cada respuesta
+Recuerda los fallos y no repite respuestas incorrectas en el reintento
+Detecta la puntuación final y hace clic en "Retry" si < 70%
+Guarda todo en quiz_memory.json — sirve para futuros módulos
+
+Sobre tu pregunta: ¿Funciona en otras instancias?
+Sí, con matices:
+
+✅ La estructura Canvas LMS + Quiz LTI es consistente entre módulos
+✅ La memoria acumulada sirve (preguntas se repiten entre intentos)
+⚠️ Puede necesitar ajustes de selectores CSS si AWS Academy actualiza su UI
+💡 Activando USE_AI = True con tu API key lo hace prácticamente universal para cualquier módulo de AWS
+"""
+AWS Academy Quiz Bot - Playwright Automation
+=============================================
+Automatiza quizzes de AWS Academy (Canvas LMS + Quiz LTI).
+
+INSTALACIÓN:
+    pip install playwright anthropic
+    playwright install chromium
+
+USO:
+    python aws_quiz_bot.py
+
+El script abrirá un navegador, tú inicias sesión manualmente,
+navegas al quiz, y el bot hace el resto automáticamente.
+"""
+
+import asyncio
+import json
+import re
+from playwright.async_api import async_playwright, Page, Frame
+
+# ─────────────────────────────────────────────
+# CONFIGURACIÓN
+# ─────────────────────────────────────────────
+# Opcional: URL directa al quiz. Si está vacío, el bot espera a que navegues tú.
+QUIZ_URL = ""
+PASSING_SCORE = 70  # Porcentaje mínimo para aprobar
+# Cambia a True si tienes API key de Anthropic para usar IA en respuestas
+USE_AI = False
+ANTHROPIC_API_KEY = ""  # Tu key si USE_AI = True
+
+
+# ─────────────────────────────────────────────
+# BASE DE CONOCIMIENTO AWS (respuestas comunes)
+# ─────────────────────────────────────────────
+AWS_KNOWLEDGE = {
+    # Añade aquí pares pregunta→respuesta que vayas aprendiendo
+    # "¿Qué servicio de AWS...?": "Amazon S3",
+}
+
+
+# ─────────────────────────────────────────────
+# CLIENTE IA (opcional)
+# ─────────────────────────────────────────────
+async def ask_claude(question: str, options: list[str]) -> str:
+    """Pregunta a Claude cuál es la respuesta correcta."""
+    if not USE_AI or not ANTHROPIC_API_KEY:
+        return ""
+
+    import anthropic
+    client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+
+    options_text = "\n".join(
+        [f"{i+1}. {opt}" for i, opt in enumerate(options)])
+    prompt = f"""Eres un experto en AWS. Responde SOLO con el número de la opción correcta (1, 2, 3 o 4).
+    
+Pregunta: {question}
+
+Opciones:
+{options_text}
+
+Responde únicamente con el número."""
+
+    message = client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=10,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    answer = message.content[0].text.strip()
+    # Extrae número de la respuesta
+    match = re.search(r'\d', answer)
+    if match:
+        idx = int(match.group()) - 1
+        if 0 <= idx < len(options):
+            return options[idx]
+    return ""
+
+
+# ─────────────────────────────────────────────
+# LÓGICA PRINCIPAL DEL BOT
+# ─────────────────────────────────────────────
+
+class QuizMemory:
+    """Recuerda qué respuestas fueron correctas e incorrectas."""
+
+    def __init__(self):
+        # pregunta → [respuesta correcta]
+        self.correct: dict[str, list[str]] = {}
+        # pregunta → [respuestas incorrectas]
+        self.incorrect: dict[str, list[str]] = {}
+        self.attempts = 0
+
+    def mark_correct(self, question: str, answer: str):
+        self.correct[question] = answer
+
+    def mark_incorrect(self, question: str, answer: str):
+        if question not in self.incorrect:
+            self.incorrect[question] = []
+        if answer not in self.incorrect[question]:
+            self.incorrect[question].append(answer)
+
+    def get_known_correct(self, question: str) -> str | None:
+        return self.correct.get(question)
+
+    def get_wrong_answers(self, question: str) -> list[str]:
+        return self.incorrect.get(question, [])
+
+    def save(self, filename="quiz_memory.json"):
+        with open(filename, "w") as f:
+            json.dump({"correct": self.correct, "incorrect": self.incorrect},
+                      f, indent=2, ensure_ascii=False)
+        print(f"💾 Memoria guardada en {filename}")
+
+    def load(self, filename="quiz_memory.json"):
+        try:
+            with open(filename) as f:
+                data = json.load(f)
+                self.correct = data.get("correct", {})
+                self.incorrect = data.get("incorrect", {})
+            print(
+                f"📂 Memoria cargada: {len(self.correct)} respuestas conocidas")
+        except FileNotFoundError:
+            print("📂 Sin memoria previa, empezando desde cero")
+
+
+async def find_quiz_frame(page: Page) -> Frame | None:
+    """Busca el frame del quiz LTI dentro de la página."""
+    await asyncio.sleep(2)
+
+    for frame in page.frames:
+        url = frame.url
+        if "quiz" in url.lower() or "quiz-lti" in url.lower() or "skillbuilder" in url.lower():
+            print(f"✅ Frame del quiz encontrado: {url[:80]}...")
+            return frame
+
+    # Si no encuentra frame específico, prueba con el frame principal
+    print("⚠️  No se encontró frame LTI específico, usando página principal")
+    return None
+
+
+async def get_questions(frame_or_page) -> list[dict]:
+    """Extrae todas las preguntas y opciones del quiz."""
+    questions = []
+
+    try:
+        # Selectores comunes en Canvas Quiz LTI
+        question_selectors = [
+            ".question",
+            "[data-testid='question']",
+            ".quiz-question",
+            "[class*='Question']",
+            "fieldset",
+        ]
+
+        for selector in question_selectors:
+            elements = await frame_or_page.query_selector_all(selector)
+            if elements:
+                print(
+                    f"📋 Encontradas {len(elements)} preguntas con selector '{selector}'")
+                break
+
+        for i, elem in enumerate(elements):
+            # Texto de la pregunta
+            q_text = await elem.inner_text()
+
+            # Opciones de respuesta
+            option_selectors = ["input[type='radio']",
+                                "input[type='checkbox']", "label", "[role='radio']"]
+            options = []
+
+            for opt_sel in option_selectors:
+                opts = await elem.query_selector_all(opt_sel)
+                if opts:
+                    for opt in opts:
+                        label = await opt.inner_text()
+                        if label.strip():
+                            options.append(
+                                {"element": opt, "text": label.strip()})
+                    break
+
+            if options:
+                questions.append({
+                    "index": i,
+                    "text": q_text.strip()[:200],
+                    "options": options,
+                    "element": elem,
+                    "is_multiple": len([o for o in options if "checkbox" in str(o)]) > 0
+                })
+
+    except Exception as e:
+        print(f"⚠️  Error extrayendo preguntas: {e}")
+
+    return questions
+
+
+async def select_answer(option_elem, page_or_frame):
+    """Hace click en una opción de respuesta."""
+    try:
+        await option_elem.scroll_into_view_if_needed()
+        await option_elem.click()
+        await asyncio.sleep(0.5)
+        return True
+    except Exception as e:
+        print(f"  ⚠️  Error al hacer click: {e}")
+        return False
+
+
+async def submit_question(page_or_frame) -> bool:
+    """Busca y hace click en el botón de siguiente/submit."""
+    submit_selectors = [
+        "button:has-text('Next')",
+        "button:has-text('Submit')",
+        "button:has-text('Check')",
+        "button:has-text('Siguiente')",
+        "button:has-text('Enviar')",
+        "[data-testid='next-button']",
+        "[data-testid='submit-button']",
+        ".submit-button",
+        "button[type='submit']",
+    ]
+
+    for sel in submit_selectors:
+        try:
+            btn = await page_or_frame.query_selector(sel)
+            if btn and await btn.is_visible():
+                await btn.click()
+                await asyncio.sleep(1.5)
+                return True
+        except:
+            continue
+
+    return False
+
+
+async def check_feedback(page_or_frame) -> str:
+    """Lee el feedback después de responder (correcto/incorrecto)."""
+    await asyncio.sleep(1)
+
+    feedback_selectors = [
+        ".correct",
+        ".incorrect",
+        "[class*='correct']",
+        "[class*='feedback']",
+        "[data-testid='feedback']",
+        ".answer-feedback",
+        "[aria-live='polite']",
+        ".result",
+    ]
+
+    for sel in feedback_selectors:
+        try:
+            elem = await page_or_frame.query_selector(sel)
+            if elem and await elem.is_visible():
+                text = await elem.inner_text()
+                text_lower = text.lower()
+                if any(w in text_lower for w in ["correct", "incorrect", "right", "wrong", "✓", "✗", "✔", "✘"]):
+                    return text
+        except:
+            continue
+
+    # Busca por color o clase CSS
+    try:
+        page_content = await page_or_frame.content()
+        if "correct" in page_content.lower():
+            if "incorrect" in page_content.lower():
+                return "INCORRECT"
+            return "CORRECT"
+    except:
+        pass
+
+    return "UNKNOWN"
+
+
+async def check_final_score(page_or_frame) -> float | None:
+    """Detecta la pantalla final y extrae el porcentaje."""
+    score_selectors = [
+        "[data-testid='score']",
+        ".score",
+        "[class*='Score']",
+        "[class*='result']",
+        ".quiz-score",
+    ]
+
+    for sel in score_selectors:
+        try:
+            elem = await page_or_frame.query_selector(sel)
+            if elem and await elem.is_visible():
+                text = await elem.inner_text()
+                # Busca porcentaje
+                match = re.search(r'(\d+(?:\.\d+)?)\s*%', text)
+                if match:
+                    return float(match.group(1))
+                # Busca fracción X/10
+                match = re.search(r'(\d+)\s*/\s*(\d+)', text)
+                if match:
+                    return (int(match.group(1)) / int(match.group(2))) * 100
+        except:
+            continue
+
+    return None
+
+
+async def click_retry(page_or_frame) -> bool:
+    """Hace click en 'Volver a intentar' o similar."""
+    retry_selectors = [
+        "button:has-text('Try Again')",
+        "button:has-text('Retry')",
+        "button:has-text('Volver a intentar')",
+        "button:has-text('Reintentar')",
+        "a:has-text('Try Again')",
+        "[data-testid='retry-button']",
+    ]
+
+    for sel in retry_selectors:
+        try:
+            btn = await page_or_frame.query_selector(sel)
+            if btn and await btn.is_visible():
+                await btn.click()
+                await asyncio.sleep(2)
+                return True
+        except:
+            continue
+
+    return False
+
+
+# ─────────────────────────────────────────────
+# ESTRATEGIA DE RESPUESTA
+# ─────────────────────────────────────────────
+
+async def choose_answer(question_text: str, options: list[dict], memory: QuizMemory) -> list[dict]:
+    """
+    Elige la(s) respuesta(s) basándose en:
+    1. Memoria de respuestas correctas previas
+    2. IA (si está habilitada)
+    3. Primera opción no intentada
+    """
+    option_texts = [o["text"] for o in options]
+    wrong = memory.get_wrong_answers(question_text)
+
+    # 1. ¿Ya sabemos la respuesta correcta?
+    known = memory.get_known_correct(question_text)
+    if known:
+        for opt in options:
+            if opt["text"] == known:
+                print(f"  🧠 Respuesta conocida: {known[:50]}")
+                return [opt]
+
+    # 2. ¿Podemos usar IA?
+    if USE_AI:
+        ai_answer = await ask_claude(question_text, option_texts)
+        if ai_answer:
+            for opt in options:
+                if opt["text"] == ai_answer:
+                    print(f"  🤖 IA sugiere: {ai_answer[:50]}")
+                    return [opt]
+
+    # 3. Base de conocimiento local
+    for q_key, ans in AWS_KNOWLEDGE.items():
+        if q_key.lower() in question_text.lower():
+            for opt in options:
+                if ans.lower() in opt["text"].lower():
+                    print(f"  📚 Base de conocimiento: {opt['text'][:50]}")
+                    return [opt]
+
+    # 4. Primera opción no intentada
+    available = [opt for opt in options if opt["text"] not in wrong]
+    if available:
+        chosen = available[0]
+        print(f"  🎲 Intentando: {chosen['text'][:50]}")
+        return [chosen]
+
+    # 5. Si ya intentamos todo, resetear y empezar de nuevo
+    print("  🔄 Todas las opciones intentadas, reintentando primera")
+    return [options[0]]
+
+
+# ─────────────────────────────────────────────
+# BUCLE PRINCIPAL
+# ─────────────────────────────────────────────
+
+async def run_quiz_bot():
+    memory = QuizMemory()
+    memory.load()
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False, slow_mo=500)
+        context = await browser.new_context()
+        page = await context.new_page()
+
+        if QUIZ_URL:
+            await page.goto(QUIZ_URL)
+        else:
+            await page.goto("https://awsacademy.instructure.com")
+
+        print("\n" + "="*60)
+        print("🤖 AWS ACADEMY QUIZ BOT")
+        print("="*60)
+        print("📌 Navega al quiz en el navegador que se abrió.")
+        print("   Cuando estés en la página del quiz, presiona ENTER aquí.")
+        print("="*60)
+        input("\n▶  Presiona ENTER cuando estés listo...")
+
+        max_attempts = 5
+
+        for attempt in range(1, max_attempts + 1):
+            memory.attempts = attempt
+            print(f"\n🔁 INTENTO #{attempt}")
+            print("-" * 40)
+
+            await asyncio.sleep(2)
+
+            # Busca el frame del quiz
+            target = await find_quiz_frame(page)
+            if not target:
+                target = page
+
+            # Extrae preguntas
+            questions = await get_questions(target)
+
+            if not questions:
+                print("⚠️  No se encontraron preguntas. ¿Estás en la página del quiz?")
+                print(
+                    "   Verifica que el quiz esté visible y presiona ENTER para reintentar...")
+                input()
+                continue
+
+            print(f"📋 Total de preguntas detectadas: {len(questions)}")
+
+            # Responde cada pregunta
+            for q in questions:
+                q_text = q["text"]
+                print(f"\n❓ Pregunta {q['index']+1}: {q_text[:80]}...")
+
+                chosen = await choose_answer(q_text, q["options"], memory)
+
+                for answer in chosen:
+                    await select_answer(answer["element"], target)
+
+                submitted = await submit_question(target)
+
+                if submitted:
+                    feedback = await check_feedback(target)
+                    feedback_lower = feedback.lower()
+
+                    if "incorrect" in feedback_lower or "wrong" in feedback_lower or "✗" in feedback:
+                        print(f"  ❌ Incorrecto")
+                        for ans in chosen:
+                            memory.mark_incorrect(q_text, ans["text"])
+                    elif "correct" in feedback_lower or "right" in feedback_lower or "✓" in feedback:
+                        print(f"  ✅ Correcto!")
+                        for ans in chosen:
+                            memory.mark_correct(q_text, ans["text"])
+                    else:
+                        print(f"  ❓ Feedback no claro: {feedback[:60]}")
+
+                    await asyncio.sleep(1)
+
+            # Verifica puntuación final
+            await asyncio.sleep(2)
+            score = await check_final_score(target)
+
+            if score is not None:
+                print(f"\n📊 PUNTUACIÓN FINAL: {score:.1f}%")
+                memory.save()
+
+                if score >= PASSING_SCORE:
+                    print(
+                        f"🎉 ¡APROBADO! Score: {score:.1f}% (mínimo: {PASSING_SCORE}%)")
+                    break
+                else:
+                    print(
+                        f"😔 No aprobado ({score:.1f}% < {PASSING_SCORE}%). Reintentando...")
+                    retried = await click_retry(target)
+                    if not retried:
+                        print(
+                            "⚠️  No encontré botón de reintento. Hazlo manualmente y presiona ENTER...")
+                        input()
+            else:
+                print("⚠️  No detecté pantalla de puntuación final.")
+                print(
+                    "   Si el quiz terminó, revisa el score y presiona ENTER para continuar...")
+                memory.save()
+                user_input = input("   ¿Aprobaste? (s/n): ").strip().lower()
+                if user_input == 's':
+                    print("🎉 ¡Marcado como aprobado!")
+                    break
+                elif attempt < max_attempts:
+                    print("   Buscando botón de reintento...")
+                    await click_retry(target)
+
+        print("\n" + "="*60)
+        print("🏁 Bot finalizado. Memoria guardada en quiz_memory.json")
+        print("="*60)
+
+        input("\nPresiona ENTER para cerrar el navegador...")
+        await browser.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(run_quiz_bot())
+
+
+Aws quiz botPY Descargarhtml-curso-aws-ctrl-shift-i.txttxtparece que el bot no detecta correctamente el formulario te paso lo que me sale al hacer ctrl+shift+i puede que eso te ayude, por cierto seguramente solo use el script sin ninguna api pues no tengo ningun modelo de pago17:10Déjame leer el HTML del inspector para entender la estructura real del quiz.Vio 2 archivosVio 2 archivosEncontré el problema clave en la línea 517. El iframe tiene src="about:blank" — el quiz se carga dinámicamente vía JavaScript después de que la página carga. Déjame ver más contexto del iframe y el formulario LTI.Looking at the LTI form and iframe launch detailsLooking at the LTI form and iframe launch detailsAhora tengo todo claro. El problema es importante — déjame explicarlo y reescribir el script completamente:
+🔍 Diagnóstico real del problema
+El quiz NO está en Canvas directamente. Está en:
+emergingtalent.contentcontroller.com  (SCORM Engine)
+El flujo es: Canvas → formulario LTI POST → SCORM → iframe con src="about:blank" que se rellena dinámicamente. El Ctrl+Shift+I que me pasaste es el HTML de Canvas, pero el quiz real vive dentro de ese iframe en otro dominio completamente diferente.
+Por eso el bot no encontraba nada — buscaba frames con "quiz" en la URL pero el frame real tiene about:blank hasta que carga el SCORM.
+La solución es un script de consola del navegador (no Playwright) — lo ejecutas directamente en el DevTools de la página donde ya ves el quiz, saltándote todos los problemas de cross-origin:Archivo creado, leyó un archivoArchivo creado, leyó un archivoPor qué el script anterior fallaba y qué cambia ahora
+El problema era que el quiz no está en Canvas — está en emergingtalent.contentcontroller.com (SCORM Engine), cargado dentro de un iframe con src="about:blank" que se rellena dinámicamente. Playwright desde fuera no podía penetrar ese iframe por restricciones cross-origin.
+La solución es este script de consola que se ejecuta dentro del navegador donde ya tienes la sesión activa, desde el mismo contexto de JavaScript que el quiz, evitando todos los problemas de cross-origin.
+
+Cómo usarlo
+
+Abre el quiz hasta ver la primera pregunta (como en tu imagen)
+Abre DevTools → F12 → pestaña Console
+Pega todo el código y pulsa Enter
+Verás los logs del bot en la consola en tiempo real
+
+
+Qué hace ahora mejor
+
+Detecta iframes automáticamente — busca el iframe con contenido real, no solo por URL
+3 estrategias de extracción — radio buttons por name, clases CSS, y fieldsets
+Memoria en sessionStorage — persiste entre intentos sin reiniciar
+Detecta "Number correct: X out of Y" — el formato exacto que aparece en tu imagen (Number correct: 0 out of 0)
+Intenta hacer click en "Begin/Start" si detecta que el quiz no ha empezado aún
+
+/**
+ * AWS Academy Quiz Bot - Console Script
+ * ======================================
+ * Ejecutar directamente en la consola del navegador (F12 → Console)
+ * mientras tienes el quiz visible.
+ *
+ * INSTRUCCIONES:
+ * 1. Abre el quiz en el navegador hasta ver la primera pregunta
+ * 2. Abre DevTools (F12) → pestaña "Console"
+ * 3. Pega TODO este código y presiona Enter
+ * 4. El bot empieza solo automáticamente
+ */
+
+(async function QuizBot() {
+
+  // ─────────────────────────────────────────────
+  // CONFIGURACIÓN
+  // ─────────────────────────────────────────────
+  const PASSING_SCORE  = 70;    // % mínimo para aprobar
+  const DELAY_CLICK    = 800;   // ms entre acciones (no bajes de 500)
+  const DELAY_FEEDBACK = 1500;  // ms esperando feedback tras responder
+  const DELAY_NEXT     = 1000;  // ms antes de pasar a siguiente pregunta
+  const MAX_ATTEMPTS   = 8;     // intentos máximos antes de rendirse
+
+  // ─────────────────────────────────────────────
+  // MEMORIA PERSISTENTE (sobrevive recargas via sessionStorage)
+  // ─────────────────────────────────────────────
+  const MEMORY_KEY = 'awsQuizBotMemory';
+
+  function loadMemory() {
+    try {
+      return JSON.parse(sessionStorage.getItem(MEMORY_KEY) || '{"correct":{},"wrong":{}}');
+    } catch { return { correct: {}, wrong: {} }; }
+  }
+
+  function saveMemory(mem) {
+    sessionStorage.setItem(MEMORY_KEY, JSON.stringify(mem));
+  }
+
+  function normalizeQ(text) {
+    return text.replace(/\s+/g, ' ').trim().substring(0, 150);
+  }
+
+  // ─────────────────────────────────────────────
+  // UTILIDADES
+  // ─────────────────────────────────────────────
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function log(msg, type = 'info') {
+    const icons = { info: '🤖', ok: '✅', fail: '❌', warn: '⚠️', score: '📊', q: '❓', choice: '🎯' };
+    console.log(`${icons[type] || '▸'} [QuizBot] ${msg}`);
+  }
+
+  // Busca el document activo: si hay iframe con contenido, úsalo
+  function getActiveDoc() {
+    // Busca iframes visibles con contenido del quiz
+    const iframes = document.querySelectorAll('iframe');
+    for (const iframe of iframes) {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (doc && doc.body && doc.body.innerHTML.length > 500) {
+          const text = doc.body.innerText || '';
+          // Verifica que tiene contenido de quiz (preguntas, opciones)
+          if (text.includes('?') || doc.querySelectorAll('input[type=radio], input[type=checkbox]').length > 0) {
+            log(`Usando iframe: ${iframe.id || iframe.name || 'sin nombre'}`);
+            return doc;
+          }
+        }
+      } catch (e) {
+        // Cross-origin bloqueado, ignorar
+      }
+    }
+    // Fallback: documento principal
+    log('Usando documento principal');
+    return document;
+  }
+
+  // ─────────────────────────────────────────────
+  // EXTRACCIÓN DE PREGUNTAS
+  // ─────────────────────────────────────────────
+  function extractQuestions(doc) {
+    const questions = [];
+
+    // Estrategia 1: inputs radio/checkbox agrupados por name
+    const inputs = doc.querySelectorAll('input[type=radio], input[type=checkbox]');
+    if (inputs.length > 0) {
+      const groups = {};
+      inputs.forEach(inp => {
+        const name = inp.name || inp.closest('fieldset')?.id || 'group_' + Math.random();
+        if (!groups[name]) groups[name] = [];
+        groups[name].push(inp);
+      });
+
+      for (const [groupName, groupInputs] of Object.entries(groups)) {
+        // Busca el texto de la pregunta cerca del grupo
+        const container = groupInputs[0].closest('fieldset, .question, [class*="question"], [class*="Question"], form, div');
+        let qText = '';
+
+        if (container) {
+          // Busca el texto antes de los inputs (la pregunta)
+          const allText = container.innerText || container.textContent || '';
+          // Toma el texto antes de la primera opción
+          const firstOptionText = groupInputs[0].closest('label')?.innerText || '';
+          const qIdx = allText.indexOf(firstOptionText);
+          qText = qIdx > 0 ? allText.substring(0, qIdx).trim() : allText.substring(0, 200).trim();
+        }
+
+        if (!qText) {
+          // Buscar legend o encabezados cercanos
+          const fieldset = groupInputs[0].closest('fieldset');
+          qText = fieldset?.querySelector('legend')?.innerText?.trim() || '';
+        }
+
+        const isMultiple = groupInputs[0].type === 'checkbox';
+        const options = groupInputs.map(inp => {
+          const label = inp.closest('label') ||
+                        doc.querySelector(`label[for="${inp.id}"]`) ||
+                        inp.parentElement;
+          return {
+            input: inp,
+            text: (label?.innerText || label?.textContent || '').trim().replace(/^\s*[A-D]\.\s*/, ''),
+          };
+        }).filter(o => o.text.length > 0);
+
+        if (options.length >= 2) {
+          questions.push({
+            id: groupName,
+            text: normalizeQ(qText || `Pregunta grupo ${groupName}`),
+            options,
+            isMultiple,
+            container,
+          });
+        }
+      }
+
+      if (questions.length > 0) {
+        log(`Encontradas ${questions.length} preguntas (estrategia radio/checkbox)`);
+        return questions;
+      }
+    }
+
+    // Estrategia 2: elementos con clases típicas de quiz
+    const selectors = [
+      '[class*="question-item"]',
+      '[class*="QuestionItem"]',
+      '[class*="quiz-question"]',
+      '[data-question-id]',
+      '.question',
+      'fieldset',
+    ];
+
+    for (const sel of selectors) {
+      const elems = doc.querySelectorAll(sel);
+      if (elems.length === 0) continue;
+
+      elems.forEach((elem, i) => {
+        const clickables = elem.querySelectorAll('input[type=radio], input[type=checkbox], [role=radio], [role=checkbox], button:not([type=submit])');
+        if (clickables.length < 2) return;
+
+        const qText = elem.querySelector('legend, [class*="stem"], [class*="question-text"], h2, h3, p')?.innerText?.trim()
+                   || elem.innerText?.split('\n')[0]?.trim()
+                   || `Pregunta ${i + 1}`;
+
+        const options = Array.from(clickables).map(el => ({
+          input: el,
+          text: (el.closest('label')?.innerText || el.innerText || el.getAttribute('aria-label') || '').trim(),
+        })).filter(o => o.text.length > 0);
+
+        if (options.length >= 2) {
+          questions.push({
+            id: `elem_${i}`,
+            text: normalizeQ(qText),
+            options,
+            isMultiple: clickables[0]?.type === 'checkbox',
+            container: elem,
+          });
+        }
+      });
+
+      if (questions.length > 0) {
+        log(`Encontradas ${questions.length} preguntas (selector: ${sel})`);
+        return questions;
+      }
+    }
+
+    log('No se encontraron preguntas con ninguna estrategia', 'warn');
+    return [];
+  }
+
+  // ─────────────────────────────────────────────
+  // ELEGIR RESPUESTA
+  // ─────────────────────────────────────────────
+  function chooseOptions(question, memory) {
+    const { text: qText, options } = question;
+    const wrongList = memory.wrong[qText] || [];
+    const knownCorrect = memory.correct[qText];
+
+    // 1. Respuesta conocida correcta
+    if (knownCorrect) {
+      const found = options.find(o => o.text === knownCorrect);
+      if (found) {
+        log(`Respuesta conocida: "${knownCorrect.substring(0, 50)}"`, 'ok');
+        return [found];
+      }
+    }
+
+    // 2. Primera opción no intentada aún como incorrecta
+    const available = options.filter(o => !wrongList.includes(o.text));
+    if (available.length > 0) {
+      log(`Intentando: "${available[0].text.substring(0, 50)}"`, 'choice');
+      return [available[0]];
+    }
+
+    // 3. Si probamos todo y ninguno funciona, resetear memoria de esta pregunta
+    log('Todas las opciones fallaron, reseteando memoria para esta pregunta', 'warn');
+    delete memory.wrong[qText];
+    saveMemory(memory);
+    return [options[0]];
+  }
+
+  // ─────────────────────────────────────────────
+  // HACER CLICK EN OPCIÓN
+  // ─────────────────────────────────────────────
+  async function clickOption(option) {
+    const el = option.input;
+    try {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await sleep(300);
+
+      // Primero prueba click directo
+      el.click();
+
+      // Si es label o div, simula eventos completos
+      if (el.tagName !== 'INPUT') {
+        el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+        el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+        el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+
+      // Marca visualmente el input como checked si es radio/checkbox
+      if (el.type === 'radio' || el.type === 'checkbox') {
+        el.checked = true;
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      await sleep(DELAY_CLICK);
+      return true;
+    } catch (e) {
+      log(`Error al hacer click: ${e.message}`, 'warn');
+      return false;
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SUBMIT / SIGUIENTE
+  // ─────────────────────────────────────────────
+  async function clickNext(doc) {
+    const texts = ['next', 'siguiente', 'submit', 'enviar', 'check', 'comprobar', 'ok', 'continue'];
+    const buttons = doc.querySelectorAll('button, input[type=submit], a[role=button]');
+
+    for (const btn of buttons) {
+      const label = (btn.innerText || btn.value || btn.getAttribute('aria-label') || '').toLowerCase().trim();
+      if (texts.some(t => label.includes(t))) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        await sleep(300);
+        btn.click();
+        log(`Botón "${btn.innerText?.trim() || label}" presionado`);
+        await sleep(DELAY_FEEDBACK);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ─────────────────────────────────────────────
+  // DETECTAR FEEDBACK (correcto/incorrecto)
+  // ─────────────────────────────────────────────
+  function detectFeedback(doc) {
+    const bodyText = (doc.body?.innerText || '').toLowerCase();
+
+    // Señales visuales en el DOM
+    const correctSelectors = [
+      '[class*="correct"]:not([class*="incorrect"])',
+      '[class*="success"]',
+      '[aria-label*="correct"]:not([aria-label*="incorrect"])',
+      '.correct-answer',
+      '[data-correct="true"]',
+    ];
+    const incorrectSelectors = [
+      '[class*="incorrect"]',
+      '[class*="wrong"]',
+      '[class*="error"]:not([class*="no-error"])',
+      '.incorrect-answer',
+      '[data-correct="false"]',
+    ];
+
+    for (const sel of incorrectSelectors) {
+      const el = doc.querySelector(sel);
+      if (el && el.offsetParent !== null) return 'INCORRECT'; // visible
+    }
+    for (const sel of correctSelectors) {
+      const el = doc.querySelector(sel);
+      if (el && el.offsetParent !== null) return 'CORRECT';
+    }
+
+    // Texto en el body
+    if (bodyText.includes('incorrect') || bodyText.includes('wrong') || bodyText.includes('incorrecto')) return 'INCORRECT';
+    if (bodyText.includes('correct') || bodyText.includes('right') || bodyText.includes('correcto')) return 'CORRECT';
+
+    return 'UNKNOWN';
+  }
+
+  // ─────────────────────────────────────────────
+  // DETECTAR PUNTUACIÓN FINAL
+  // ─────────────────────────────────────────────
+  function detectScore(doc) {
+    const text = doc.body?.innerText || '';
+
+    // Busca "X out of Y" o "X/Y" o "X%"
+    let match = text.match(/(\d+)\s*out\s*of\s*(\d+)/i);
+    if (match) return (parseInt(match[1]) / parseInt(match[2])) * 100;
+
+    match = text.match(/(\d+)\s*\/\s*(\d+)/);
+    if (match) return (parseInt(match[1]) / parseInt(match[2])) * 100;
+
+    match = text.match(/(\d+(?:\.\d+)?)\s*%/);
+    if (match) return parseFloat(match[1]);
+
+    // Busca "Number correct: X out of Y" (formato AWS Academy específico)
+    match = text.match(/number correct[:\s]+(\d+)\s*out\s*of\s*(\d+)/i);
+    if (match) return (parseInt(match[1]) / parseInt(match[2])) * 100;
+
+    return null;
+  }
+
+  // ─────────────────────────────────────────────
+  // CLICK EN RETRY
+  // ─────────────────────────────────────────────
+  async function clickRetry(doc) {
+    const texts = ['retry', 'try again', 'volver a intentar', 'reintentar', 'retake', 'repetir'];
+    const buttons = doc.querySelectorAll('button, a, input[type=button]');
+
+    for (const btn of buttons) {
+      const label = (btn.innerText || btn.value || btn.getAttribute('aria-label') || '').toLowerCase().trim();
+      if (texts.some(t => label.includes(t))) {
+        btn.click();
+        log(`Botón retry "${btn.innerText?.trim()}" presionado`);
+        await sleep(2000);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ─────────────────────────────────────────────
+  // BUCLE PRINCIPAL
+  // ─────────────────────────────────────────────
+  const memory = loadMemory();
+  log('=== AWS Academy Quiz Bot iniciado ===');
+  log(`Memoria cargada: ${Object.keys(memory.correct).length} respuestas correctas conocidas`);
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    log(`\n========== INTENTO #${attempt} ==========`);
+    await sleep(1500);
+
+    const doc = getActiveDoc();
+    const questions = extractQuestions(doc);
+
+    if (questions.length === 0) {
+      log('No se encontraron preguntas. Verifica que el quiz esté visible.', 'warn');
+      log('Reintentando en 3 segundos...', 'warn');
+      await sleep(3000);
+
+      // Intenta volver a detectar el doc
+      const retryDoc = getActiveDoc();
+      const retryQs = extractQuestions(retryDoc);
+      if (retryQs.length === 0) {
+        log('Sigue sin detectar preguntas. Posiblemente estás en la pantalla de inicio del quiz.', 'warn');
+        log('Busca un botón de "Begin" o "Start" para iniciar...', 'warn');
+
+        // Intenta hacer click en Start/Begin
+        const startTexts = ['begin', 'start', 'iniciar', 'empezar', 'take quiz', 'take the quiz'];
+        const allBtns = retryDoc.querySelectorAll('button, a');
+        let started = false;
+        for (const btn of allBtns) {
+          const label = (btn.innerText || '').toLowerCase().trim();
+          if (startTexts.some(t => label.includes(t))) {
+            log(`Haciendo click en "${btn.innerText?.trim()}"...`);
+            btn.click();
+            await sleep(2000);
+            started = true;
+            break;
+          }
+        }
+        if (!started) {
+          log('No encontré botón de inicio. Por favor inicia el quiz manualmente.', 'warn');
+          await sleep(5000);
+        }
+        continue;
+      }
+    }
+
+    log(`Total preguntas encontradas: ${questions.length}`);
+
+    // Responde cada pregunta
+    for (let qi = 0; qi < questions.length; qi++) {
+      const q = questions[qi];
+      log(`\n❓ Pregunta ${qi + 1}: ${q.text.substring(0, 80)}...`, 'q');
+
+      const chosen = chooseOptions(q, memory);
+
+      // Hace click en la(s) opción(es)
+      for (const opt of chosen) {
+        await clickOption(opt);
+      }
+
+      // Presiona siguiente/submit
+      const submitted = await clickNext(doc);
+
+      if (submitted) {
+        // Lee feedback
+        const feedback = detectFeedback(doc);
+        if (feedback === 'CORRECT') {
+          log('Correcto!', 'ok');
+          memory.correct[q.text] = chosen[0].text;
+        } else if (feedback === 'INCORRECT') {
+          log(`Incorrecto. Opción "${chosen[0].text.substring(0, 40)}" marcada como mala.`, 'fail');
+          if (!memory.wrong[q.text]) memory.wrong[q.text] = [];
+          for (const c of chosen) {
+            if (!memory.wrong[q.text].includes(c.text)) {
+              memory.wrong[q.text].push(c.text);
+            }
+          }
+        } else {
+          log(`Feedback no detectado (puede ser normal en este quiz)`, 'warn');
+        }
+
+        saveMemory(memory);
+        await sleep(DELAY_NEXT);
+      } else {
+        log('No encontré botón next/submit, esperando...', 'warn');
+        await sleep(2000);
+      }
+    }
+
+    // ── Verifica puntuación final ──
+    await sleep(2000);
+    const doc2 = getActiveDoc();
+    const score = detectScore(doc2);
+
+    if (score !== null) {
+      log(`\nPUNTUACIÓN FINAL: ${score.toFixed(1)}%`, 'score');
+      log(`Respuestas correctas en memoria: ${Object.keys(memory.correct).length}`, 'score');
+
+      if (score >= PASSING_SCORE) {
+        log(`¡APROBADO! 🎉 ${score.toFixed(1)}% >= ${PASSING_SCORE}%`, 'ok');
+        saveMemory(memory);
+        return;
+      } else {
+        log(`No aprobado (${score.toFixed(1)}% < ${PASSING_SCORE}%). Reintentando...`, 'fail');
+        const retried = await clickRetry(doc2);
+        if (!retried) {
+          log('No encontré botón de retry. Búscalo manualmente y vuelve a ejecutar el script.', 'warn');
+          saveMemory(memory);
+          return;
+        }
+        await sleep(2000);
+      }
+    } else {
+      log('No detecté pantalla de puntuación final. Puede que las preguntas se respondan de una en una.', 'warn');
+      // Si hay una sola pregunta visible, continuamos el bucle
+      await sleep(1500);
+    }
+  }
+
+  log(`Se alcanzó el máximo de ${MAX_ATTEMPTS} intentos.`, 'warn');
+  log(`Respuestas correctas aprendidas: ${Object.keys(memory.correct).length}`, 'score');
+  saveMemory(memory);
+
+})();
