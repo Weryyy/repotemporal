@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const puppeteer = require('puppeteer');
 
 // Utilidades
@@ -54,7 +55,6 @@ const detectCorrectId = (actionGroups = {}) => {
 
 // Guarda el JS original para inspección (ahora sí lo guardará físicamente)
 const saveSlideFile = (url, body) => {
-    const path = require('path');
     const outDir = path.join(process.cwd(), 'slides-dump');
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
     
@@ -80,12 +80,34 @@ const saveSlideFile = (url, body) => {
 let bancoDePreguntas = [];
 let preguntaActiva = '';
 
+const processSlideData = (data) => {
+    const titulo = cleanText(data.title) || 'Sin título';
+    const root = [];
+    if (data.slideLayers) data.slideLayers.forEach((l) => l.objects && root.push(...l.objects));
+    if (data.objects) root.push(...data.objects);
+    const allObjects = flattenObjects(root);
+
+    const idWinner = detectCorrectId(data.actionGroups || {});
+
+    const opciones = allObjects
+        .map((o) => ({ id: o.id, accType: o.accType, kind: o.kind, text: getObjText(o) }))
+        .filter((o) => o.text && o.text.length > 4)
+        .filter((o) => o.accType === 'radio' || o.accType === 'check' || o.kind === 'vectorshape');
+
+    if (opciones.length > 0) {
+        if (!bancoDePreguntas.find(p => p.idWinner === idWinner)) {
+            bancoDePreguntas.push({ titulo, idWinner, opciones });
+        }
+    }
+};
+
 (async () => {
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null, args: ['--start-maximized'] });
     const page = await browser.newPage();
-    await page.setCacheEnabled(false); // Omitir el caché, forzando peticiones cada vez que carga
+    await page.setCacheEnabled(false); 
+    await page.setBypassServiceWorker(true); 
 
-    console.log('🚀 BOT V5 (Sincronización Inteligente) LISTO.');
+    console.log('🚀 BOT V6 (Interceptor en Tiempo Real Reactivo) LISTO.');
     console.log('Iniciando autologin automático...');
 
     try {
@@ -118,23 +140,7 @@ let preguntaActiva = '';
         const data = parseSlide(match[1]);
         if (!data) return;
 
-        const titulo = data.title || 'Sin título';
-        const root = [];
-        if (data.slideLayers) data.slideLayers.forEach((l) => l.objects && root.push(...l.objects));
-        if (data.objects) root.push(...data.objects);
-        const allObjects = flattenObjects(root);
-
-        const idWinner = detectCorrectId(data.actionGroups || {});
-
-        const opciones = allObjects
-            .map((o) => ({ id: o.id, accType: o.accType, kind: o.kind, text: getObjText(o) }))
-            .filter((o) => o.text && o.text.length > 4)
-            .filter((o) => o.accType === 'radio' || o.accType === 'check' || o.kind === 'vectorshape');
-
-        if (opciones.length > 0) {
-            // Guardar en memoria. Quitamos el aviso en terminal para mantenerlo limpio
-            bancoDePreguntas.push({ titulo, idWinner, opciones });
-        }
+        processSlideData(data);
     });
 
     // Comprobador visual cada 1 segundo para sincronizarse contigo
@@ -142,56 +148,50 @@ let preguntaActiva = '';
         if (bancoDePreguntas.length === 0) return;
 
         try {
-            const frames = page.frames();
-            // Buscar el iframe de la presentación
-            let storyFrame = frames.find(f => f.url().includes("index_lms.html") || f.url().includes("story.html"));
-            
-            // A veces el iframe está anidado, buscamos más profundo
-            if (!storyFrame) {
-                for (const f of frames) {
-                    const childFrames = f.childFrames();
-                    const target = childFrames.find(cf => cf.url().includes("index_lms.html") || cf.url().includes("story.html"));
-                    if (target) { storyFrame = target; break; }
+            // Buscador recursivo y profundo del iframe (para evitar perderlo al cambiar de módulo)
+            let storyFrame = null;
+            function searchFramesRec(frame) {
+                if (frame.url().includes("index_lms.html") || frame.url().includes("story.html")) return frame;
+                for (const child of frame.childFrames()) {
+                    const found = searchFramesRec(child);
+                    if (found) return found;
                 }
+                return null;
             }
+            
+            for (const f of page.frames()) {
+                const found = searchFramesRec(f);
+                if (found) { storyFrame = found; break; }
+            }
+
             // Si no lo encontramos en iframes, usamos la página principal
             if (!storyFrame) storyFrame = page;
 
             const activeIndex = await storyFrame.evaluate((banco) => {
-                function isReallyVisible(el) {
+                // Función más simple para detectar si es la diapositiva actual
+                function isVisibleOnScreen(el) {
                     if (!el) return false;
-                    
-                    // Comprobar estilos computados y padres pidiendo aria-hidden
                     let current = el;
                     while (current && current.nodeType === 1) {
                         const style = window.getComputedStyle(current);
-                        if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
-                            return false;
-                        }
-                        if (current.getAttribute('aria-hidden') === 'true') {
-                            return false;
-                        }
+                        // Si está oculto por CSS, no es el actual
+                        if (style.display === 'none' || style.visibility === 'hidden') return false;
+                        // Articulate suele ocultar las slides anteriores con esto:
+                        if (current.getAttribute('aria-hidden') === 'true') return false;
+                        // Y con opacity 0 también:
+                        if (style.opacity === '0') return false;
+                        
                         current = current.parentElement;
                     }
-                    
-                    // Comprobar si Articulate ha sacado el elemento de la pantalla (truco suyo)
-                    const rect = el.getBoundingClientRect();
-                    if (rect.width === 0 || rect.height === 0) return false;
-                    if (rect.right < 0 || rect.bottom < 0 || rect.left > window.innerWidth || rect.top > window.innerHeight) return false;
-                    
                     return true;
                 }
 
                 for (let i = 0; i < banco.length; i++) {
                     const slide = banco[i];
                     for (let opt of slide.opciones) {
-                        const qs = `[data-model-id="${opt.id}"], [id*="${opt.id}"]`;
-                        // Buscar todos los elementos que coincidan por si hay capas fantasma
-                        const elements = document.querySelectorAll(qs);
-                        for (let el of elements) {
-                            if (isReallyVisible(el)) {
-                                return i;
-                            }
+                        const elem = document.querySelector(`[data-model-id="${opt.id}"], [id*="${opt.id}"]`);
+                        if (elem && isVisibleOnScreen(elem)) {
+                            return i; // Hemos encontrado la que se está mostrando AHORA MISMO
                         }
                     }
                 }
